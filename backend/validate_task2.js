@@ -12,6 +12,28 @@ const server = spawn('node', ['server.js'], { stdio: 'inherit' });
 await new Promise(resolve => setTimeout(resolve, 2000));
 
 try {
+  // Test POST /api/assets validation
+  console.log('Testing POST /api/assets validation...');
+  const badRes1 = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'stock'
+    })
+  });
+  assert.strictEqual(badRes1.status, 400);
+
+  const badRes2 = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Tesla Inc',
+      type: ' '
+    })
+  });
+  assert.strictEqual(badRes2.status, 400);
+  console.log('POST /api/assets validation success!');
+
   // Test POST /api/assets
   console.log('Testing POST /api/assets...');
   const postRes = await fetch('http://localhost:5001/api/assets', {

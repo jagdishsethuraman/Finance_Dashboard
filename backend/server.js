@@ -26,6 +26,12 @@ app.get('/api/assets', (req, res) => {
 app.post('/api/assets', (req, res) => {
   try {
     const { id, name, type, ticker, units, avg_buy_price, current_price } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Missing or invalid required field: name' });
+    }
+    if (!type || typeof type !== 'string' || !type.trim()) {
+      return res.status(400).json({ error: 'Missing or invalid required field: type' });
+    }
     const last_updated = new Date().toISOString();
     if (id) {
       const stmt = db.prepare(`
@@ -65,27 +71,32 @@ app.post('/api/portfolio/sync', async (req, res) => {
     
     for (const asset of assets) {
       try {
-        let price = asset.current_price;
+        let price = null;
         // Handle MF API or Yahoo Finance
         if (asset.type === 'mutual_fund' && /^\d+$/.test(asset.ticker)) {
           // mfapi.in
           const resMF = await fetch(`https://api.mfapi.in/mf/${asset.ticker}`);
           const dataMF = await resMF.json();
           if (dataMF.data && dataMF.data.length > 0) {
-            price = parseFloat(dataMF.data[0].nav);
+            const parsed = parseFloat(dataMF.data[0].nav);
+            if (!isNaN(parsed)) {
+              price = parsed;
+            }
           }
         } else {
           // yahoo finance
           const quote = await yahooFinance.quote(asset.ticker);
-          if (quote && quote.regularMarketPrice) {
+          if (quote && (quote.regularMarketPrice !== undefined && quote.regularMarketPrice !== null)) {
             price = quote.regularMarketPrice;
           }
         }
         
-        const last_updated = new Date().toISOString();
-        db.prepare('UPDATE assets SET current_price = ?, last_updated = ? WHERE id = ?')
-          .run(price, last_updated, asset.id);
-        updated.push({ id: asset.id, name: asset.name, price });
+        if (price !== null) {
+          const last_updated = new Date().toISOString();
+          db.prepare('UPDATE assets SET current_price = ?, last_updated = ? WHERE id = ?')
+            .run(price, last_updated, asset.id);
+          updated.push({ id: asset.id, name: asset.name, price });
+        }
       } catch (syncErr) {
         console.error(`Failed to sync ticker: ${asset.ticker}`, syncErr);
       }
