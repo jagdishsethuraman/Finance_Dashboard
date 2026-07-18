@@ -134,11 +134,12 @@ app.get('/api/transactions', (req, res) => {
 app.post('/api/transactions', (req, res) => {
   try {
     const { amount, description, category, timestamp, type } = req.body;
+    const normalizedTimestamp = new Date(timestamp || Date.now()).toISOString();
     const stmt = db.prepare(`
       INSERT INTO transactions (amount, description, category, timestamp, type) 
       VALUES (?, ?, ?, ?, ?)
     `);
-    stmt.run(amount, description, category, timestamp || new Date().toISOString(), type);
+    stmt.run(amount, description, category, normalizedTimestamp, type);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -150,17 +151,22 @@ app.get('/api/budgets', (req, res) => {
     const budgets = db.prepare('SELECT * FROM budgets').all();
     
     // Calculate current month's spending for each category
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0,0,0,0);
-    const isoStart = startOfMonth.toISOString();
+    const now = new Date();
+    const utcYear = now.getUTCFullYear();
+    const utcMonth = now.getUTCMonth();
+    
+    const startOfMonthUTC = new Date(Date.UTC(utcYear, utcMonth, 1, 0, 0, 0, 0));
+    const isoStart = startOfMonthUTC.toISOString();
+    
+    const endOfMonthUTC = new Date(Date.UTC(utcYear, utcMonth + 1, 1, 0, 0, 0, 0));
+    const isoEnd = endOfMonthUTC.toISOString();
     
     const spending = db.prepare(`
       SELECT category, SUM(amount) as total 
       FROM transactions 
-      WHERE type = 'expense' AND timestamp >= ? 
+      WHERE type = 'expense' AND timestamp >= ? AND timestamp < ?
       GROUP BY category
-    `).all(isoStart);
+    `).all(isoStart, isoEnd);
     
     const spendingMap = {};
     spending.forEach(s => { spendingMap[s.category] = s.total; });
