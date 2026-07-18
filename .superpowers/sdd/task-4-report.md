@@ -31,3 +31,16 @@
 
 ## Issues and Concerns
 - None.
+
+## Fixes Applied
+
+1. **Validation cwd lock**:
+   - Updated `backend/validate_task4.js` to resolve `server.js` relative to `__dirname` instead of a relative path assuming execution from `backend/`.
+   - Defined `__dirname` and `__filename` dynamically using `fileURLToPath` and `dirname` from Node.js path/url APIs to ensure compatibility with ESM.
+2. **Fragile JSON parsing**:
+   - Refactored `backend/server.js` to extract the JSON block from Ollama response using `indexOf('{')` and `lastIndexOf('}')` before running `JSON.parse`.
+   - Ensures robust parsing even if surrounding conversational or markdown-fenced text is present in the response.
+
+## Validation and Test Verification
+- Ran the test suite via `node backend/validate_task4.js` inside the workspace directory.
+- All five validation test cases passed successfully.
