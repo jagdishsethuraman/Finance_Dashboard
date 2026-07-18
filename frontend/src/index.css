@@ -1,0 +1,29 @@
+:root {
+  --canvas-bg: #0A0A0C;
+  --surface-bg: #151518;
+  --ink-primary: #F5F5F7;
+  --ink-secondary: #8E8E93;
+  --whisper-border: rgba(255, 255, 255, 0.08);
+  --positive: #34C759;
+  --negative: #FF453A;
+  --accent: #007AFF;
+  --font-sans: 'Satoshi', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--canvas-bg);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button, input, select {
+  font-family: inherit;
+  color: inherit;
+}
