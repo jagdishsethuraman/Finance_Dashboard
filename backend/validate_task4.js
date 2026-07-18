@@ -1,6 +1,11 @@
 import assert from 'assert';
 import { spawn } from 'child_process';
 import db from './database.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Clean tables first
 db.prepare('DELETE FROM transactions').run();
@@ -9,7 +14,7 @@ db.prepare('DELETE FROM pdf_passwords').run();
 db.prepare('DELETE FROM import_logs').run();
 
 console.log('Starting validation server...');
-const server = spawn('node', ['server.js'], {
+const server = spawn('node', [join(__dirname, 'server.js')], {
   stdio: 'inherit',
   env: {
     ...process.env,

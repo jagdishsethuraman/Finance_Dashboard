@@ -325,7 +325,13 @@ app.post('/api/import/pdf', upload.single('file'), async (req, res) => {
           throw new Error(`Ollama returned status ${ollamaRes.status}`);
         }
         const ollamaData = await ollamaRes.json();
-        const rawJson = ollamaData.message.content.replace(/```json|```/g, '').trim();
+        const content = ollamaData.message.content;
+        const startIndex = content.indexOf('{');
+        const endIndex = content.lastIndexOf('}');
+        if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+          throw new Error('No valid JSON block found in response');
+        }
+        const rawJson = content.substring(startIndex, endIndex + 1);
         parsedData = JSON.parse(rawJson);
       } catch (fetchErr) {
         if (process.env.NODE_ENV === 'test' || process.env.ALLOW_FALLBACK === 'true') {
