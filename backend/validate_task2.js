@@ -32,6 +32,42 @@ try {
     })
   });
   assert.strictEqual(badRes2.status, 400);
+
+  const badRes3 = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Tesla Inc',
+      type: 'stock',
+      avg_buy_price: 200
+    })
+  });
+  assert.strictEqual(badRes3.status, 400);
+
+  const badRes4 = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Tesla Inc',
+      type: 'stock',
+      units: 'invalid',
+      avg_buy_price: 200
+    })
+  });
+  assert.strictEqual(badRes4.status, 400);
+
+  const badRes5 = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Tesla Inc',
+      type: 'stock',
+      units: 10,
+      avg_buy_price: 'invalid'
+    })
+  });
+  assert.strictEqual(badRes5.status, 400);
+
   console.log('POST /api/assets validation success!');
 
   // Test POST /api/assets
@@ -96,7 +132,33 @@ try {
   assert.strictEqual(getData2[0].name, 'Tesla Inc (Updated)');
   assert.strictEqual(getData2[0].units, 12);
   assert.strictEqual(getData2[0].avg_buy_price, 190);
-  console.log('UPDATE via POST success!');
+  assert.strictEqual(getData2[0].current_price, syncData.updated[0].price);
+
+  // Test UPDATE via POST without current_price (should keep current_price)
+  console.log('Testing UPDATE via POST without current_price...');
+  const updateResWithoutPrice = await fetch('http://localhost:5001/api/assets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: assetId,
+      name: 'Tesla Inc (Updated Again)',
+      type: 'stock',
+      ticker: 'TSLA',
+      units: 15,
+      avg_buy_price: 180
+    })
+  });
+  const updateDataWithoutPrice = await updateResWithoutPrice.json();
+  assert.strictEqual(updateDataWithoutPrice.success, true);
+
+  // Verify update kept existing current_price
+  const getRes2b = await fetch('http://localhost:5001/api/assets');
+  const getData2b = await getRes2b.json();
+  assert.strictEqual(getData2b[0].name, 'Tesla Inc (Updated Again)');
+  assert.strictEqual(getData2b[0].units, 15);
+  assert.strictEqual(getData2b[0].avg_buy_price, 180);
+  assert.strictEqual(getData2b[0].current_price, syncData.updated[0].price);
+  console.log('UPDATE via POST without current_price success (kept existing price)!');
 
   // Test DELETE /api/assets/:id
   console.log('Testing DELETE /api/assets/:id...');

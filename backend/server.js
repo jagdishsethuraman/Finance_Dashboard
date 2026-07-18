@@ -32,20 +32,35 @@ app.post('/api/assets', (req, res) => {
     if (!type || typeof type !== 'string' || !type.trim()) {
       return res.status(400).json({ error: 'Missing or invalid required field: type' });
     }
+    if (units === undefined || units === null || typeof units !== 'number' || isNaN(units)) {
+      return res.status(400).json({ error: 'Missing or invalid required field: units' });
+    }
+    if (avg_buy_price === undefined || avg_buy_price === null || typeof avg_buy_price !== 'number' || isNaN(avg_buy_price)) {
+      return res.status(400).json({ error: 'Missing or invalid required field: avg_buy_price' });
+    }
+    if (current_price !== undefined && current_price !== null && (typeof current_price !== 'number' || isNaN(current_price))) {
+      return res.status(400).json({ error: 'Invalid field: current_price' });
+    }
     const last_updated = new Date().toISOString();
     if (id) {
+      const existing = db.prepare('SELECT * FROM assets WHERE id = ?').get(id);
+      if (!existing) {
+        return res.status(404).json({ error: 'Asset not found' });
+      }
+      const final_current_price = (current_price !== undefined && current_price !== null) ? current_price : existing.current_price;
       const stmt = db.prepare(`
         UPDATE assets 
         SET name = ?, type = ?, ticker = ?, units = ?, avg_buy_price = ?, current_price = ?, last_updated = ? 
         WHERE id = ?
       `);
-      stmt.run(name, type, ticker || null, units, avg_buy_price, current_price || avg_buy_price, last_updated, id);
+      stmt.run(name, type, ticker || null, units, avg_buy_price, final_current_price, last_updated, id);
     } else {
+      const final_current_price = (current_price !== undefined && current_price !== null) ? current_price : avg_buy_price;
       const stmt = db.prepare(`
         INSERT INTO assets (name, type, ticker, units, avg_buy_price, current_price, last_updated) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `);
-      stmt.run(name, type, ticker || null, units, avg_buy_price, current_price || avg_buy_price, last_updated);
+      stmt.run(name, type, ticker || null, units, avg_buy_price, final_current_price, last_updated);
     }
     res.json({ success: true });
   } catch (err) {
