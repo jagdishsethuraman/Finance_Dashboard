@@ -122,6 +122,77 @@ app.post('/api/portfolio/sync', async (req, res) => {
   }
 });
 
+app.get('/api/transactions', (req, res) => {
+  try {
+    const transactions = db.prepare('SELECT * FROM transactions ORDER BY timestamp DESC').all();
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/transactions', (req, res) => {
+  try {
+    const { amount, description, category, timestamp, type } = req.body;
+    const stmt = db.prepare(`
+      INSERT INTO transactions (amount, description, category, timestamp, type) 
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    stmt.run(amount, description, category, timestamp || new Date().toISOString(), type);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/budgets', (req, res) => {
+  try {
+    const budgets = db.prepare('SELECT * FROM budgets').all();
+    
+    // Calculate current month's spending for each category
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0,0,0,0);
+    const isoStart = startOfMonth.toISOString();
+    
+    const spending = db.prepare(`
+      SELECT category, SUM(amount) as total 
+      FROM transactions 
+      WHERE type = 'expense' AND timestamp >= ? 
+      GROUP BY category
+    `).all(isoStart);
+    
+    const spendingMap = {};
+    spending.forEach(s => { spendingMap[s.category] = s.total; });
+    
+    const result = budgets.map(b => ({
+      id: b.id,
+      category: b.category,
+      limit: b.monthly_limit,
+      spent: spendingMap[b.category] || 0
+    }));
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/budgets', (req, res) => {
+  try {
+    const { category, limit } = req.body;
+    const stmt = db.prepare(`
+      INSERT INTO budgets (category, monthly_limit) 
+      VALUES (?, ?) 
+      ON CONFLICT(category) DO UPDATE SET monthly_limit = excluded.monthly_limit
+    `);
+    stmt.run(category, limit);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
