@@ -17,7 +17,7 @@ export default function Portfolio() {
   
   const [editingAssetId, setEditingAssetId] = useState(null);
   
-  const defaultWeights = { stock: 50, mutual_fund: 30, gold: 10, fixed_deposit: 10 };
+  const defaultWeights = { stock: 40, mutual_fund: 30, fixed_deposit: 10, gold: 10, cash: 10 };
   const [targetWeights, setTargetWeights] = useState(() => {
     const saved = localStorage.getItem('targetWeights');
     return saved ? JSON.parse(saved) : defaultWeights;
@@ -139,15 +139,15 @@ export default function Portfolio() {
     localStorage.setItem('targetWeights', JSON.stringify(targetWeights));
   }, [targetWeights]);
 
-  const totalVal = assets.reduce((sum, a) => sum + (a.units * a.current_price), 0);
-
-  // Calculate totals by type
-  const typeTotals = { stock: 0, mutual_fund: 0, gold: 0, fixed_deposit: 0 };
+  // Calculate totals by tracked type only — totalVal limited to tracked types to keep rebalancing math consistent
+  const TRACKED_TYPES = ['stock', 'mutual_fund', 'fixed_deposit', 'gold', 'cash'];
+  const typeTotals = { stock: 0, mutual_fund: 0, fixed_deposit: 0, gold: 0, cash: 0 };
   assets.forEach(a => {
     if (typeTotals[a.type] !== undefined) {
       typeTotals[a.type] += a.units * a.current_price;
     }
   });
+  const totalVal = TRACKED_TYPES.reduce((sum, t) => sum + typeTotals[t], 0);
 
   const targetWeightsSum = Object.values(targetWeights).reduce((sum, w) => sum + w, 0);
 
@@ -174,7 +174,8 @@ export default function Portfolio() {
       stock: { bg: 'rgba(0, 122, 255, 0.12)', color: '#0A84FF', label: 'Stock' },
       mutual_fund: { bg: 'rgba(175, 82, 222, 0.12)', color: '#BF5AF2', label: 'Mutual Fund' },
       gold: { bg: 'rgba(255, 149, 0, 0.12)', color: '#FF9F0A', label: 'Gold' },
-      fixed_deposit: { bg: 'rgba(52, 199, 89, 0.12)', color: '#30D158', label: 'Fixed Deposit' }
+      fixed_deposit: { bg: 'rgba(52, 199, 89, 0.12)', color: '#30D158', label: 'Fixed Deposit' },
+      cash: { bg: 'rgba(94, 210, 203, 0.12)', color: '#5ED2CB', label: 'Cash' }
     };
     return maps[type] || { bg: 'var(--whisper-border)', color: 'var(--ink-secondary)', label: type };
   };
@@ -185,7 +186,8 @@ export default function Portfolio() {
       stock: 'Stocks',
       mutual_fund: 'Mutual Funds',
       gold: 'Gold',
-      fixed_deposit: 'Fixed Deposits'
+      fixed_deposit: 'Fixed Deposits',
+      cash: 'Cash'
     };
     return maps[tab] || tab;
   };
@@ -287,7 +289,7 @@ export default function Portfolio() {
           {/* Inventory Sub-tabs and Table */}
           <div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-              {['all', 'stock', 'mutual_fund', 'fixed_deposit', 'gold'].map(t => (
+              {['all', 'stock', 'mutual_fund', 'fixed_deposit', 'gold', 'cash'].map(t => (
                 <button
                   key={t}
                   onClick={() => setActiveSubTab(t)}
@@ -452,7 +454,7 @@ export default function Portfolio() {
             </p>
 
             {/* Target Weights Input Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
               {Object.keys(targetWeights).map(type => {
                 const badge = getTypeBadgeStyles(type);
                 return (
@@ -518,7 +520,7 @@ export default function Portfolio() {
                 marginBottom: '24px'
               }}>
                 <AlertCircle size={16} />
-                <span>Allocation warning: Target weights sum to {targetWeightsSum}%. Adjust inputs to equal exactly 100% for proper rebalancing.</span>
+                <span>Allocation warning: Target weights sum to <span style={{ fontFamily: 'var(--font-mono)' }}>{targetWeightsSum}%</span>. Adjust inputs to equal exactly 100% for proper rebalancing.</span>
               </div>
             )}
 
@@ -549,7 +551,7 @@ export default function Portfolio() {
                         <div>
                           <span style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--ink-primary)' }}>{badge.label}</span>
                           <span style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--ink-secondary)' }}>
-                            (Current: {advice.actualPercent.toFixed(1)}% vs Target: {advice.targetPercent}%)
+                            (Current: <span style={{ fontFamily: 'var(--font-mono)' }}>{advice.actualPercent.toFixed(1)}%</span> vs Target: <span style={{ fontFamily: 'var(--font-mono)' }}>{advice.targetPercent}%</span>)
                           </span>
                         </div>
                         <div style={{
@@ -674,8 +676,9 @@ export default function Portfolio() {
               >
                 <option value="stock">Stock</option>
                 <option value="mutual_fund">Mutual Fund</option>
-                <option value="gold">Gold</option>
                 <option value="fixed_deposit">Fixed Deposit</option>
+                <option value="gold">Gold</option>
+                <option value="cash">Cash</option>
               </select>
             </div>
 
