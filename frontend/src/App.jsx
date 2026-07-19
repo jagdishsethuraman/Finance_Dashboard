@@ -20,8 +20,7 @@ export function useCurrency() {
 
 // ── Top Currency Bar ──────────────────────────────────────────────────────────
 function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
-  // Show '—' only while we haven't received any rate yet (initial fetch in progress)
-  const loaded = lastUpdated !== '' || rate !== 1;
+  const loaded = !!lastUpdated || rate !== 1;
   const inr = loaded ? rate.toFixed(2) : '—';
   const usd = loaded ? (1 / rate).toFixed(4) : '—';
   const isEst = lastUpdated === 'est.';
@@ -42,19 +41,18 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
     }}>
       {/* Rate display */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {fetching ? (
-          <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
-        ) : (
-          <TrendingUp size={12} style={{ color: 'var(--positive)' }} />
-        )}
-        <span>
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-primary)' }}>1 USD</span>
+        {fetching
+          ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
+          : <TrendingUp size={12} style={{ color: 'var(--positive)' }} />
+        }
+        <span style={{ fontFamily: 'var(--font-mono)' }}>
+          <span style={{ color: 'var(--ink-primary)' }}>1 USD</span>
           {' = '}
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>₹{inr}</span>
+          <span style={{ color: 'var(--accent)' }}>₹{inr}</span>
           {'  ·  '}
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-primary)' }}>1 INR</span>
+          <span style={{ color: 'var(--ink-primary)' }}>1 INR</span>
           {' = '}
-          <span style={{ fontFamily: 'var(--font-mono)', color: '#FF9F0A' }}>${usd}</span>
+          <span style={{ color: '#FF9F0A' }}>${usd}</span>
         </span>
         {lastUpdated && (
           <span style={{ color: isEst ? '#FF9F0A' : 'var(--ink-secondary)', fontSize: '11px' }}>
@@ -63,8 +61,9 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
         )}
       </div>
 
-      {/* Toggle pill */}
+      {/* Toggle pill — hover via CSS (.currency-pill) */}
       <button
+        className="currency-pill"
         onClick={onToggle}
         title={`Switch to ${currency === 'USD' ? 'INR' : 'USD'}`}
         style={{
@@ -77,8 +76,6 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
           gap: '2px',
           transition: 'border-color 0.2s'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
-        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--whisper-border)'}
       >
         {['USD', 'INR'].map((c) => (
           <span
@@ -102,10 +99,11 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
   );
 }
 
-// ── Nav Button ────────────────────────────────────────────────────────────────
+// ── Nav Button — hover via CSS (.nav-btn) ─────────────────────────────────────
 function NavBtn({ active, onClick, icon: Icon, label }) {
   return (
     <button
+      className={`nav-btn${active ? ' active' : ''}`}
       onClick={onClick}
       style={{
         display: 'flex',
@@ -120,10 +118,8 @@ function NavBtn({ active, onClick, icon: Icon, label }) {
         textAlign: 'left',
         fontWeight: 'bold',
         color: 'var(--ink-primary)',
-        transition: 'all 0.2s'
+        transition: 'background 0.2s'
       }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
     >
       <Icon size={20} /> {label}
     </button>
@@ -138,58 +134,39 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState('');
   const [fetching, setFetching] = useState(false);
 
-  // Fetch live USD→INR rate
+  // Fetch live USD→INR rate — try 3 sources, fallback to hardcoded
   useEffect(() => {
     const fetchRate = async () => {
       setFetching(true);
+      let inr = null;
 
-      // Try multiple sources in order
-      const SOURCES = [
-        async () => {
-          const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR');
-          const d = await r.json();
-          if (d?.rates?.INR) return d.rates.INR;
-          throw new Error('no data');
-        },
-        async () => {
-          const r = await fetch('https://open.er-api.com/v6/latest/USD');
-          const d = await r.json();
-          if (d?.rates?.INR) return d.rates.INR;
-          throw new Error('no data');
-        },
-        async () => {
-          // Last-resort: ECB data via exchangerate.host (no key needed)
-          const r = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=INR');
-          const d = await r.json();
-          if (d?.rates?.INR) return d.rates.INR;
-          throw new Error('no data');
-        }
-      ];
+      try {
+        const d = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR').then(r => r.json());
+        if (d?.rates?.INR) inr = d.rates.INR;
+      } catch {}
 
-      let fetched = false;
-      for (const source of SOURCES) {
-        try {
-          const inr = await source();
-          setRate(inr);
-          const now = new Date();
-          setLastUpdated(now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
-          fetched = true;
-          break;
-        } catch {
-          // try next source
-        }
-      }
+      if (!inr) try {
+        const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
+        if (d?.rates?.INR) inr = d.rates.INR;
+      } catch {}
 
-      if (!fetched) {
-        // Hardcoded indicative fallback — RBI mid-market ~Jul 2025
-        setRate(84.5);
+      if (!inr) try {
+        const d = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=INR').then(r => r.json());
+        if (d?.rates?.INR) inr = d.rates.INR;
+      } catch {}
+
+      if (inr) {
+        setRate(inr);
+        setLastUpdated(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+      } else {
+        setRate(84.5); // fallback
         setLastUpdated('est.');
       }
 
       setFetching(false);
     };
+
     fetchRate();
-    // Refresh every 5 minutes
     const id = setInterval(fetchRate, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
@@ -200,12 +177,10 @@ export default function App() {
     localStorage.setItem('currency', next);
   };
 
-  // Context value — convert USD → display currency
-  const symbol = currency === 'INR' ? '₹' : '$';
+  const symbol  = currency === 'INR' ? '₹' : '$';
   const convert = (usdValue) => currency === 'INR' ? usdValue * rate : usdValue;
-  // Convert from display currency back to USD for storage
-  const toUSD = (displayValue) => currency === 'INR' ? displayValue / rate : displayValue;
-  const format = (usdValue, decimals = 2) => convert(usdValue).toLocaleString('en-IN', {
+  const toUSD   = (displayValue) => currency === 'INR' ? displayValue / rate : displayValue;
+  const format  = (usdValue, decimals = 2) => convert(usdValue).toLocaleString('en-IN', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
   });
@@ -214,7 +189,6 @@ export default function App() {
     <CurrencyContext.Provider value={{ currency, rate, symbol, convert, toUSD, format, toggleCurrency }}>
       <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
 
-        {/* Top currency bar — spans full width above everything */}
         <CurrencyBar
           currency={currency}
           rate={rate}
@@ -224,7 +198,6 @@ export default function App() {
         />
 
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          {/* Sidebar */}
           <aside style={{
             width: '240px',
             background: 'var(--surface-bg)',
@@ -242,7 +215,6 @@ export default function App() {
             </nav>
           </aside>
 
-          {/* Main content */}
           <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
             {currentTab === 'dashboard' && <Dashboard />}
             {currentTab === 'portfolio' && <Portfolio />}
@@ -251,7 +223,11 @@ export default function App() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.05) !important; }
+        .currency-pill:hover { border-color: var(--accent) !important; }
+      `}</style>
     </CurrencyContext.Provider>
   );
 }
