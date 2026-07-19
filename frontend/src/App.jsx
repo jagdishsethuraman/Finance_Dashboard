@@ -131,36 +131,19 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState('');
   const [fetching, setFetching] = useState(false);
 
-  // Fetch live USD→INR rate — try 3 sources, fallback to hardcoded
+  // Fetch cached rate from local backend
   useEffect(() => {
     const fetchRate = async () => {
       setFetching(true);
-      let inr = null;
-
       try {
-        const d = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR').then(r => r.json());
-        if (d?.rates?.INR) inr = d.rates.INR;
-      } catch (e) { console.warn('[rate] frankfurter failed:', e.message); }
-
-      if (!inr) try {
-        const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
-        if (d?.rates?.INR) inr = d.rates.INR;
-      } catch (e) { console.warn('[rate] open.er-api failed:', e.message); }
-
-      // fawazahmed0/currency-api: MIT-licensed, GitHub-hosted, always free
-      if (!inr) try {
-        const d = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json').then(r => r.json());
-        if (d?.usd?.inr) inr = d.usd.inr;
-      } catch (e) { console.warn('[rate] jsdelivr CDN failed:', e.message); }
-
-      if (inr !== null) {
-        setRate(inr);
-        setLastUpdated(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
-      } else {
-        setRate(84.5); // hardcoded fallback
-        setLastUpdated('est.');
+        const d = await fetch('/api/rates').then(r => r.json());
+        if (d?.rate) {
+          setRate(d.rate);
+          setLastUpdated(d.lastUpdated || '');
+        }
+      } catch (e) {
+        console.error('[rates] failed to fetch from backend proxy:', e.message);
       }
-
       setFetching(false);
     };
 

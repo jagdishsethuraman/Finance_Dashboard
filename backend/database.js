@@ -52,6 +52,12 @@ db.exec(`
     records_added INTEGER NOT NULL DEFAULT 0,
     timestamp TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS exchange_rates (
+    pair TEXT PRIMARY KEY,
+    rate REAL NOT NULL,
+    last_updated TEXT NOT NULL
+  );
 `);
 
 export default db;

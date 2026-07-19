@@ -16,6 +16,85 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', dbPath: db.name });
 });
 
+app.get('/api/rates', async (req, res) => {
+  try {
+    const cached = db.prepare("SELECT * FROM exchange_rates WHERE pair = 'USD_INR'").get();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    let rate = cached?.rate || null;
+    let lastUpdated = cached?.last_updated || '';
+    let isEst = false;
+
+    const needsFetch = !cached || cached.last_updated < oneHourAgo;
+
+    if (needsFetch) {
+      let fetchedRate = null;
+
+      // 1. Frankfurter API
+      try {
+        const d = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR').then(r => r.json());
+        if (d?.rates?.INR) fetchedRate = d.rates.INR;
+      } catch (e) {
+        console.warn('[rates] Frankfurter failed:', e.message);
+      }
+
+      // 2. Open Exchange Rates API (Optional via environment key)
+      if (!fetchedRate && process.env.OPEN_EXCHANGE_RATES_KEY) {
+        try {
+          const d = await fetch(`https://openexchangerates.org/api/latest.json?app_id=${process.env.OPEN_EXCHANGE_RATES_KEY}&symbols=INR`).then(r => r.json());
+          if (d?.rates?.INR) fetchedRate = d.rates.INR;
+        } catch (e) {
+          console.warn('[rates] Open Exchange Rates failed:', e.message);
+        }
+      }
+
+      // 3. Open-ER-API
+      if (!fetchedRate) {
+        try {
+          const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
+          if (d?.rates?.INR) fetchedRate = d.rates.INR;
+        } catch (e) {
+          console.warn('[rates] Open-ER-API failed:', e.message);
+        }
+      }
+
+      // 4. Fawaz Ahmed / jsdelivr CDN API
+      if (!fetchedRate) {
+        try {
+          const d = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json').then(r => r.json());
+          if (d?.usd?.inr) fetchedRate = d.usd.inr;
+        } catch (e) {
+          console.warn('[rates] jsdelivr CDN failed:', e.message);
+        }
+      }
+
+      if (fetchedRate !== null) {
+        rate = fetchedRate;
+        lastUpdated = new Date().toISOString();
+        db.prepare(`
+          INSERT INTO exchange_rates (pair, rate, last_updated)
+          VALUES ('USD_INR', ?, ?)
+          ON CONFLICT(pair) DO UPDATE SET rate = excluded.rate, last_updated = excluded.last_updated
+        `).run(rate, lastUpdated);
+      } else if (cached) {
+        console.warn('[rates] All fetches failed. Using stale cached rate.');
+      } else {
+        rate = 84.5; // fallback
+        lastUpdated = new Date().toISOString();
+        isEst = true;
+      }
+    }
+
+    res.json({
+      rate,
+      lastUpdated: isEst ? 'est.' : new Date(lastUpdated).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      isEst
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/assets', (req, res) => {
   try {
     const stmt = db.prepare('SELECT * FROM assets');
