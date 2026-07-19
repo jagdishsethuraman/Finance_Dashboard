@@ -5,17 +5,14 @@ import Portfolio from './components/Portfolio';
 import ImportWizard from './components/ImportWizard';
 
 // ── Currency Context ──────────────────────────────────────────────────────────
-export const CurrencyContext = createContext({
-  currency: 'USD',
-  rate: 1,
-  symbol: '$',
-  convert: (v) => v,
-  format: (v) => v.toFixed(2),
-  toggleCurrency: () => {}
-});
+// null default: consuming outside the Provider tree throws immediately instead
+// of silently returning wrong stubs (convert→string, rate=1 on real data).
+export const CurrencyContext = createContext(null);
 
 export function useCurrency() {
-  return useContext(CurrencyContext);
+  const ctx = useContext(CurrencyContext);
+  if (!ctx) throw new Error('useCurrency must be used inside <App> (CurrencyContext.Provider)');
+  return ctx;
 }
 
 // ── Top Currency Bar ──────────────────────────────────────────────────────────
@@ -61,7 +58,7 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
         )}
       </div>
 
-      {/* Toggle pill — hover via CSS (.currency-pill) */}
+      {/* Toggle pill — border lives in CSS to avoid !important fight with inline style */}
       <button
         className="currency-pill"
         onClick={onToggle}
@@ -69,7 +66,7 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
         style={{
           display: 'flex',
           background: 'var(--canvas-bg)',
-          border: '1px solid var(--whisper-border)',
+          // border set in CSS (.currency-pill) so :hover override works without !important
           borderRadius: '20px',
           padding: '3px',
           cursor: 'pointer',
@@ -99,7 +96,7 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle }) {
   );
 }
 
-// ── Nav Button — hover via CSS (.nav-btn) ─────────────────────────────────────
+// ── Nav Button — background fully in CSS to avoid inline-style specificity war ─
 function NavBtn({ active, onClick, icon: Icon, label }) {
   return (
     <button
@@ -111,7 +108,7 @@ function NavBtn({ active, onClick, icon: Icon, label }) {
         gap: '12px',
         width: '100%',
         padding: '12px',
-        background: active ? 'var(--accent)' : 'transparent',
+        // background lives in CSS (.nav-btn / .nav-btn.active / .nav-btn:hover)
         border: 'none',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -143,23 +140,24 @@ export default function App() {
       try {
         const d = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR').then(r => r.json());
         if (d?.rates?.INR) inr = d.rates.INR;
-      } catch {}
+      } catch (e) { console.warn('[rate] frankfurter failed:', e.message); }
 
       if (!inr) try {
         const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
         if (d?.rates?.INR) inr = d.rates.INR;
-      } catch {}
+      } catch (e) { console.warn('[rate] open.er-api failed:', e.message); }
 
+      // fawazahmed0/currency-api: MIT-licensed, GitHub-hosted, always free
       if (!inr) try {
-        const d = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=INR').then(r => r.json());
-        if (d?.rates?.INR) inr = d.rates.INR;
-      } catch {}
+        const d = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json').then(r => r.json());
+        if (d?.usd?.inr) inr = d.usd.inr;
+      } catch (e) { console.warn('[rate] jsdelivr CDN failed:', e.message); }
 
-      if (inr) {
+      if (inr !== null) {
         setRate(inr);
         setLastUpdated(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
       } else {
-        setRate(84.5); // fallback
+        setRate(84.5); // hardcoded fallback
         setLastUpdated('est.');
       }
 
@@ -225,8 +223,11 @@ export default function App() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.05) !important; }
-        .currency-pill:hover { border-color: var(--accent) !important; }
+        .nav-btn              { background: transparent; }
+        .nav-btn.active       { background: var(--accent); }
+        .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.05); }
+        .currency-pill        { border: 1px solid var(--whisper-border); }
+        .currency-pill:hover  { border-color: var(--accent); }
       `}</style>
     </CurrencyContext.Provider>
   );
