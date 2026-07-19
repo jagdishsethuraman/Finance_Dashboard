@@ -63,7 +63,7 @@ export default function Dashboard() {
     <div>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Overview</h2>
+          <h2 className="title-text" style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Overview</h2>
           <p style={{ color: 'var(--ink-secondary)', margin: '4px 0 0 0' }}>Financial health and budgets dashboard</p>
         </div>
         <button 
@@ -92,7 +92,7 @@ export default function Dashboard() {
         marginBottom: '24px'
       }}>
         {/* Net Worth Bento */}
-        <div style={{
+        <div className="glass-card" style={{
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
@@ -100,7 +100,7 @@ export default function Dashboard() {
           padding: '24px'
         }}>
           <p style={{ color: 'var(--ink-secondary)', margin: '0 0 8px 0', fontSize: '14px' }}>Net Worth</p>
-          <h3 style={{
+          <h3 className="mono-num" style={{
             fontFamily: 'var(--font-mono)',
             fontSize: '36px',
             fontWeight: 'bold',
@@ -111,7 +111,7 @@ export default function Dashboard() {
         </div>
 
         {/* Allocation Bento */}
-        <div style={{
+        <div className="glass-card" style={{
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
@@ -154,7 +154,7 @@ export default function Dashboard() {
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '4px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors[idx % colors.length] }} />
                   <span style={{ textTransform: 'capitalize' }}>{a.type}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', marginLeft: 'auto', fontWeight: 'bold' }}>{a.percent.toFixed(1)}%</span>
+                  <span className="mono-num" style={{ fontFamily: 'var(--font-mono)', marginLeft: 'auto', fontWeight: 'bold' }}>{a.percent.toFixed(1)}%</span>
                 </div>
               );
             })}
@@ -162,7 +162,7 @@ export default function Dashboard() {
         </div>
 
         {/* Budget Limits Bento */}
-        <div style={{
+        <div className="glass-card" style={{
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
@@ -177,7 +177,7 @@ export default function Dashboard() {
                 <div key={idx}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                     <span>{b.category}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>{symbol}{format(b.spent, 0)} / {symbol}{format(b.limit, 0)}</span>
+                    <span className="mono-num" style={{ fontFamily: 'var(--font-mono)' }}>{symbol}{format(b.spent, 0)} / {symbol}{format(b.limit, 0)}</span>
                   </div>
                   <div style={{ height: '6px', background: 'var(--canvas-bg)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                     <div style={{
@@ -195,13 +195,13 @@ export default function Dashboard() {
       </div>
 
       {/* Transactions Feed */}
-      <div style={{
+      <div className="glass-card" style={{
         background: 'var(--surface-bg)',
         border: '1px solid var(--whisper-border)',
         borderRadius: 'var(--radius-lg)',
         padding: '24px'
       }}>
-        <h4 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Recent Transactions</h4>
+        <h4 className="title-text" style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Recent Transactions</h4>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--whisper-border)', color: 'var(--ink-secondary)' }}>
@@ -217,7 +217,7 @@ export default function Dashboard() {
                 <td style={{ padding: '12px 8px' }}>{t.description}</td>
                 <td style={{ padding: '12px 8px' }}>{t.category}</td>
                 <td style={{ padding: '12px 8px', color: 'var(--ink-secondary)' }}>{new Date(t.timestamp).toLocaleDateString()}</td>
-                <td style={{
+                <td className="mono-num" style={{
                   padding: '12px 8px',
                   textAlign: 'right',
                   fontFamily: 'var(--font-mono)',

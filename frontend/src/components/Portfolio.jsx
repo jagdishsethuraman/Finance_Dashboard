@@ -26,6 +26,7 @@ export default function Portfolio() {
   });
   
   const [activeSubTab, setActiveSubTab] = useState('all');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const loadAssets = async () => {
     try {
@@ -90,12 +91,13 @@ export default function Portfolio() {
       // Reset form and reload
       setForm({ name: '', type: 'stock', ticker: '', units: '', avg_buy_price: '', current_price: '' });
       setEditingAssetId(null);
+      setIsDrawerOpen(false);
       loadAssets();
     } catch (err) {
       console.error('Error submitting form:', err);
     }
   };
-
+ 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this asset?')) return;
     try {
@@ -104,6 +106,7 @@ export default function Portfolio() {
         if (editingAssetId === id) {
           setEditingAssetId(null);
           setForm({ name: '', type: 'stock', ticker: '', units: '', avg_buy_price: '', current_price: '' });
+          setIsDrawerOpen(false);
         }
         loadAssets();
       }
@@ -111,7 +114,7 @@ export default function Portfolio() {
       console.error('Error deleting asset:', err);
     }
   };
-
+ 
   const startEdit = (asset) => {
     setEditingAssetId(asset.id);
     // Convert stored USD values to display currency for the edit form
@@ -124,16 +127,13 @@ export default function Portfolio() {
       avg_buy_price: toDisplay(asset.avg_buy_price),
       current_price: asset.current_price ? toDisplay(asset.current_price) : ''
     });
-    // Scroll to form smoothly
-    const formEl = document.getElementById('asset-form-card');
-    if (formEl) {
-      formEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    setIsDrawerOpen(true);
   };
-
+ 
   const cancelEdit = () => {
     setEditingAssetId(null);
     setForm({ name: '', type: 'stock', ticker: '', units: '', avg_buy_price: '', current_price: '' });
+    setIsDrawerOpen(false);
   };
 
   useEffect(() => {
@@ -202,31 +202,57 @@ export default function Portfolio() {
       {/* Header section */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Assets & Rebalancing</h2>
+          <h2 className="title-text" style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Assets & Rebalancing</h2>
           <p style={{ color: 'var(--ink-secondary)', margin: '4px 0 0 0' }}>Manage portfolio holdings and calculate rebalancing trade advice</p>
         </div>
-        <button 
-          onClick={triggerSync} 
-          disabled={syncing || loading}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 16px',
-            background: 'var(--surface-bg)',
-            border: '1px solid var(--whisper-border)',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            color: 'var(--ink-primary)',
-            transition: 'all 0.2s',
-            opacity: syncing ? 0.7 : 1
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
-          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--whisper-border)'}
-        >
-          <RefreshCw size={16} className={syncing ? 'spin-anim' : ''} /> {syncing ? 'Syncing...' : 'Sync Prices'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => {
+              setEditingAssetId(null);
+              setForm({ name: '', type: 'stock', ticker: '', units: '', avg_buy_price: '', current_price: '' });
+              setIsDrawerOpen(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'var(--accent)',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
+          >
+            <Plus size={16} /> Add Asset
+          </button>
+          <button 
+            onClick={triggerSync} 
+            disabled={syncing || loading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'var(--surface-bg)',
+              border: '1px solid var(--whisper-border)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              color: 'var(--ink-primary)',
+              transition: 'all 0.2s',
+              opacity: syncing ? 0.7 : 1
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--whisper-border)'}
+          >
+            <RefreshCw size={16} className={syncing ? 'spin-anim' : ''} /> {syncing ? 'Syncing...' : 'Sync Prices'}
+          </button>
+        </div>
       </header>
 
       {/* Overview Cards */}
@@ -285,11 +311,8 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* Main Split Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: '32px', alignItems: 'start' }}>
-        
-        {/* Left Side: Table & Rebalancer */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* Main Container */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           
           {/* Inventory Sub-tabs and Table */}
           <div>
@@ -601,40 +624,37 @@ export default function Portfolio() {
           </div>
         </div>
 
-        {/* Right Side: Sidebar Add/Edit Form */}
-        <div id="asset-form-card" style={{ 
-          background: 'var(--surface-bg)', 
-          border: '1px solid var(--whisper-border)', 
-          borderRadius: '16px', 
-          padding: '24px',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
-          position: 'sticky',
-          top: '24px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
-              {editingAssetId ? 'Edit Holding' : 'Add Asset'}
+      {/* Side Slide Drawer */}
+      <div 
+        className={`drawer-overlay ${isDrawerOpen ? 'active' : ''}`} 
+        onClick={() => cancelEdit()}
+      >
+        <div 
+          className="drawer-content glass-card" 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 className="title-text" style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
+              {editingAssetId ? 'Edit Holding' : 'Add New Asset'}
             </h3>
-            {editingAssetId && (
-              <button 
-                onClick={cancelEdit}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--ink-secondary)',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-                title="Cancel editing"
-              >
-                <X size={18} />
-              </button>
-            )}
+            <button 
+              onClick={cancelEdit}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--ink-secondary)',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+              title="Close drawer"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-secondary)', marginBottom: '6px' }}>Asset Name</label>
               <input
@@ -745,7 +765,7 @@ export default function Portfolio() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-secondary)', marginBottom: '6px' }}>Avg Buy Price {currency === 'INR' && <span style={{ fontWeight: 'normal', color: '#FF9F0A' }}>(in ₹)</span>}</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-secondary)', marginBottom: '6px' }}>Avg Price {currency === 'INR' && <span style={{ fontWeight: 'normal', color: '#FF9F0A' }}>(in ₹)</span>}</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <span style={{ position: 'absolute', left: '10px', color: 'var(--ink-secondary)', fontSize: '14px' }}>{symbol}</span>
                   <input
@@ -841,7 +861,6 @@ export default function Portfolio() {
             </button>
           </form>
         </div>
-
       </div>
     </div>
   );
