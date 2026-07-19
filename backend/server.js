@@ -311,6 +311,7 @@ async function tryParsePDF(buffer, password = '') {
 
 
 app.post('/api/import/pdf', upload.single('file'), async (req, res) => {
+  console.log('PDF Import Request Body:', req.body);
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     

@@ -177,8 +177,15 @@ export default function ImportWizard() {
               <Key size={20} /> Password Required
             </h3>
             <button
-              onClick={reset}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-secondary)' }}
+              onClick={() => { if (status !== 'uploading') reset(); }}
+              disabled={status === 'uploading'}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                cursor: status === 'uploading' ? 'default' : 'pointer', 
+                color: 'var(--ink-secondary)',
+                opacity: status === 'uploading' ? 0.4 : 1
+              }}
             >
               <X size={18} />
             </button>
@@ -213,33 +220,39 @@ export default function ImportWizard() {
             type="password"
             placeholder="Enter PDF password"
             value={password}
+            disabled={status === 'uploading'}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') uploadFile(file, password); }}
-            style={{ ...inputStyle, marginBottom: '12px' }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && status !== 'uploading') uploadFile(file, password); }}
+            style={{ ...inputStyle, marginBottom: '12px', opacity: status === 'uploading' ? 0.6 : 1 }}
             onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
             onBlur={(e) => e.target.style.borderColor = 'var(--whisper-border)'}
             autoFocus
           />
           <label style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            fontSize: '13px', color: 'var(--ink-secondary)', marginBottom: '20px', cursor: 'pointer'
+            fontSize: '13px', color: 'var(--ink-secondary)', marginBottom: '20px', cursor: status === 'uploading' ? 'default' : 'pointer'
           }}>
             <input
               type="checkbox"
               checked={remember}
+              disabled={status === 'uploading'}
               onChange={(e) => setRemember(e.target.checked)}
               style={{ accentColor: 'var(--accent)' }}
             />
             Remember password pattern for similar files
           </label>
-          <button onClick={() => uploadFile(file, password)} style={btnPrimary}>
-            Unlock and Parse PDF
+          <button 
+            onClick={() => { if (status !== 'uploading') uploadFile(file, password); }} 
+            disabled={status === 'uploading'}
+            style={{ ...btnPrimary, opacity: status === 'uploading' ? 0.7 : 1, cursor: status === 'uploading' ? 'default' : 'pointer' }}
+          >
+            {status === 'uploading' ? 'Unlocking & Parsing (Ollama)...' : 'Unlock and Parse PDF'}
           </button>
         </div>
       )}
 
-      {/* Uploading State */}
-      {status === 'uploading' && (
+      {/* Uploading State (only full-screen if not in password modal) */}
+      {status === 'uploading' && !showPasswordPrompt && (
         <div style={{
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
