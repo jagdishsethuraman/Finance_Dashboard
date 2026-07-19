@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { TrendingUp, RefreshCw } from 'lucide-react';
+import { useCurrency } from '../App';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState({ netWorth: 0, change: 0, allocation: [] });
   const [budgets, setBudgets] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [syncing, setSyncing] = useState(false);
+  const { symbol, format } = useCurrency();
 
   const loadData = async () => {
     try {
@@ -104,7 +106,7 @@ export default function Dashboard() {
             fontWeight: 'bold',
             margin: 0
           }}>
-            ${summary.netWorth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {symbol}{format(summary.netWorth)}
           </h3>
         </div>
 

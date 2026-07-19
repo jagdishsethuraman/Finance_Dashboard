@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, AlertCircle, Scale, RefreshCw, X, DollarSign } from 'lucide-react';
+import { useCurrency } from '../App';
 
 export default function Portfolio() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const { symbol, format, toUSD, currency, rate } = useCurrency();
   
   const [form, setForm] = useState({
     name: '',
@@ -60,12 +62,13 @@ export default function Portfolio() {
         type: form.type,
         ticker: form.ticker.trim() || null,
         units: parseFloat(form.units),
-        avg_buy_price: parseFloat(form.avg_buy_price),
+        // Always store in USD internally; toUSD() converts INR→USD when in INR mode
+        avg_buy_price: toUSD(parseFloat(form.avg_buy_price)),
       };
       
       // Send current_price if provided (especially useful for custom assets without tickers)
       if (form.current_price !== '') {
-        payload.current_price = parseFloat(form.current_price);
+        payload.current_price = toUSD(parseFloat(form.current_price));
       }
 
       if (editingAssetId) {
@@ -111,13 +114,15 @@ export default function Portfolio() {
 
   const startEdit = (asset) => {
     setEditingAssetId(asset.id);
+    // Convert stored USD values to display currency for the edit form
+    const toDisplay = (usd) => currency === 'INR' ? (usd * rate).toFixed(2) : usd.toString();
     setForm({
       name: asset.name,
       type: asset.type,
       ticker: asset.ticker || '',
       units: asset.units.toString(),
-      avg_buy_price: asset.avg_buy_price.toString(),
-      current_price: asset.current_price ? asset.current_price.toString() : ''
+      avg_buy_price: toDisplay(asset.avg_buy_price),
+      current_price: asset.current_price ? toDisplay(asset.current_price) : ''
     });
     // Scroll to form smoothly
     const formEl = document.getElementById('asset-form-card');
@@ -238,7 +243,7 @@ export default function Portfolio() {
         }}>
           <span style={{ color: 'var(--ink-secondary)', fontSize: '13px', marginBottom: '6px' }}>Total Portfolio Value</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '28px', fontWeight: 'bold', color: 'var(--ink-primary)' }}>
-            ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {symbol}{format(totalVal)}
           </span>
         </div>
 
@@ -380,13 +385,13 @@ export default function Portfolio() {
                                 {a.units.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                               </td>
                               <td style={{ padding: '14px 8px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
-                                ${a.avg_buy_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {symbol}{format(a.avg_buy_price)}
                               </td>
                               <td style={{ padding: '14px 8px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
-                                ${a.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {symbol}{format(a.current_price)}
                               </td>
                               <td style={{ padding: '14px 8px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 'bold', color: 'var(--ink-primary)' }}>
-                                ${(a.units * a.current_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {symbol}{format(a.units * a.current_price)}
                               </td>
                               <td style={{ padding: '14px 8px', textAlign: 'center' }}>
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -560,7 +565,7 @@ export default function Portfolio() {
                           fontSize: '14px',
                           color: isOnTarget ? 'var(--ink-secondary)' : isBuy ? 'var(--positive)' : 'var(--negative)'
                         }}>
-                          {isOnTarget ? 'ON TARGET' : isBuy ? `BUY $${diffAbs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `SELL $${diffAbs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          {isOnTarget ? 'ON TARGET' : isBuy ? `BUY ${symbol}${format(diffAbs)}` : `SELL ${symbol}${format(diffAbs)}`}
                         </div>
                       </div>
 
@@ -740,9 +745,9 @@ export default function Portfolio() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-secondary)', marginBottom: '6px' }}>Avg Buy Price</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-secondary)', marginBottom: '6px' }}>Avg Buy Price {currency === 'INR' && <span style={{ fontWeight: 'normal', color: '#FF9F0A' }}>(in ₹)</span>}</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ position: 'absolute', left: '10px', color: 'var(--ink-secondary)', fontSize: '14px' }}>$</span>
+                  <span style={{ position: 'absolute', left: '10px', color: 'var(--ink-secondary)', fontSize: '14px' }}>{symbol}</span>
                   <input
                     type="number"
                     step="any"
@@ -778,10 +783,10 @@ export default function Portfolio() {
                 color: 'var(--ink-secondary)', 
                 marginBottom: '6px' 
               }}>
-                Current Price <span style={{ fontWeight: 'normal', color: 'var(--ink-secondary)' }}>(Optional)</span>
+                Current Price <span style={{ fontWeight: 'normal', color: 'var(--ink-secondary)' }}>(Optional{currency === 'INR' ? ', in ₹' : ''})</span>
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <span style={{ position: 'absolute', left: '10px', color: 'var(--ink-secondary)', fontSize: '14px' }}>$</span>
+                <span style={{ position: 'absolute', left: '10px', color: 'var(--ink-secondary)', fontSize: '14px' }}>{symbol}</span>
                 <input
                   type="number"
                   step="any"
