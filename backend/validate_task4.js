@@ -20,6 +20,7 @@ const server = spawn('node', [join(__dirname, 'server.js')], {
     ...process.env,
     MOCK_PDF_PARSING: 'true',
     MOCK_OLLAMA: 'true',
+    NODE_ENV: 'test',
     PORT: '5001'
   }
 });

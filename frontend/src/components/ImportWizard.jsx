@@ -190,10 +190,23 @@ export default function ImportWizard() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: '8px',
               background: 'var(--canvas-bg)', padding: '10px 12px',
-              borderRadius: '8px', marginBottom: '16px', fontSize: '13px'
+              borderRadius: '8px', marginBottom: '16px', fontSize: '13px',
+              minWidth: 0
             }}>
-              <FileText size={14} style={{ color: 'var(--ink-secondary)' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-secondary)' }}>{file.name}</span>
+              <FileText size={14} style={{ color: 'var(--ink-secondary)', flexShrink: 0 }} />
+              <span 
+                title={file.name}
+                style={{ 
+                  fontFamily: 'var(--font-mono)', 
+                  color: 'var(--ink-secondary)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  flex: 1
+                }}
+              >
+                {file.name}
+              </span>
             </div>
           )}
           <input

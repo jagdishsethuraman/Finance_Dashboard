@@ -4,7 +4,10 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, 'db', 'finance.db');
+const isTestRun = process.env.NODE_ENV === 'test' || 
+                  (process.argv[1] && process.argv[1].includes('validate_'));
+const dbName = isTestRun ? 'finance_test.db' : 'finance.db';
+const dbPath = path.join(__dirname, 'db', dbName);
 
 // Ensure database directory exists before initializing SQLite database
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });

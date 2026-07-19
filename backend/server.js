@@ -357,7 +357,24 @@ app.post('/api/import/pdf', upload.single('file'), async (req, res) => {
 
     // If password worked and user asked to remember
     if ((req.body.remember === 'true' || req.body.remember === true) && password) {
-      const fileBasePattern = filename.split('_')[0] + '_*.pdf'; // simple auto-pattern
+      let fileBasePattern = filename;
+      if (filename.includes('_')) {
+        fileBasePattern = filename.split('_')[0] + '_*.pdf';
+      } else {
+        const extIndex = filename.lastIndexOf('.');
+        if (extIndex !== -1) {
+          const baseName = filename.substring(0, extIndex);
+          const matchDigits = baseName.match(/^(.*?)\d+$/);
+          if (matchDigits) {
+            fileBasePattern = matchDigits[1] + '*.pdf';
+          } else {
+            fileBasePattern = baseName + '*.pdf';
+          }
+        } else {
+          fileBasePattern = filename + '*.pdf';
+        }
+      }
+
       db.prepare(`
         INSERT INTO pdf_passwords (name_pattern, encrypted_password) 
         VALUES (?, ?) 

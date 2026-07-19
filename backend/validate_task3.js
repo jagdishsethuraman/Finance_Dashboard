@@ -1,13 +1,24 @@
 import assert from 'assert';
 import { spawn } from 'child_process';
 import db from './database.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Clean tables first
 db.prepare('DELETE FROM transactions').run();
 db.prepare('DELETE FROM budgets').run();
 
 console.log('Starting validation server...');
-const server = spawn('node', ['server.js'], { stdio: 'inherit' });
+const server = spawn('node', [join(__dirname, 'server.js')], {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    NODE_ENV: 'test'
+  }
+});
 
 // Wait for server to boot
 await new Promise(resolve => setTimeout(resolve, 2000));
