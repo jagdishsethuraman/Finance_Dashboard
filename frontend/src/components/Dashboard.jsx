@@ -76,7 +76,7 @@ export default function Dashboard() {
             padding: '10px 16px',
             background: 'var(--surface-bg)',
             border: '1px solid var(--whisper-border)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             cursor: 'pointer',
             fontWeight: 'bold'
           }}
@@ -96,7 +96,7 @@ export default function Dashboard() {
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
-          borderRadius: '16px',
+          borderRadius: 'var(--radius-lg)',
           padding: '24px'
         }}>
           <p style={{ color: 'var(--ink-secondary)', margin: '0 0 8px 0', fontSize: '14px' }}>Net Worth</p>
@@ -115,7 +115,7 @@ export default function Dashboard() {
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
-          borderRadius: '16px',
+          borderRadius: 'var(--radius-lg)',
           padding: '24px',
           display: 'flex',
           alignItems: 'center',
@@ -166,7 +166,7 @@ export default function Dashboard() {
           gridColumn: 'span 4',
           background: 'var(--surface-bg)',
           border: '1px solid var(--whisper-border)',
-          borderRadius: '16px',
+          borderRadius: 'var(--radius-lg)',
           padding: '24px'
         }}>
           <p style={{ color: 'var(--ink-secondary)', margin: '0 0 12px 0', fontSize: '14px' }}>Monthly Budgets</p>
@@ -177,14 +177,14 @@ export default function Dashboard() {
                 <div key={idx}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                     <span>{b.category}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>${b.spent}/${b.limit}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>{symbol}{format(b.spent, 0)} / {symbol}{format(b.limit, 0)}</span>
                   </div>
-                  <div style={{ height: '6px', background: 'var(--canvas-bg)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: 'var(--canvas-bg)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: `${percent}%`,
                       background: percent >= 90 ? 'var(--negative)' : 'var(--accent)',
-                      borderRadius: '3px'
+                      borderRadius: 'var(--radius-sm)'
                     }} />
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function Dashboard() {
       <div style={{
         background: 'var(--surface-bg)',
         border: '1px solid var(--whisper-border)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radius-lg)',
         padding: '24px'
       }}>
         <h4 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Recent Transactions</h4>
@@ -223,7 +223,7 @@ export default function Dashboard() {
                   fontFamily: 'var(--font-mono)',
                   color: t.type === 'expense' ? 'var(--negative)' : 'var(--positive)'
                 }}>
-                  {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
+                  {t.type === 'expense' ? '-' : '+'}{symbol}{format(t.amount)}
                 </td>
               </tr>
             ))}
