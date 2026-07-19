@@ -4,6 +4,8 @@ import YahooFinanceClass from 'yahoo-finance2';
 import db from './database.js';
 import multer from 'multer';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 
 const yahooFinance = new YahooFinanceClass({ suppressNotices: ['yahooSurvey'] });
