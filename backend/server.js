@@ -302,11 +302,38 @@ async function tryParsePDF(buffer, password = '') {
     }
   }
 
-  const options = {
-    ownerPassword: password,
-    userPassword: password
-  };
-  return await pdf(buffer, options);
+  const PDFJS = require('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js');
+  PDFJS.disableWorker = true;
+
+  const loadingTask = PDFJS.getDocument({
+    data: new Uint8Array(buffer),
+    password: password
+  });
+
+  const doc = await loadingTask;
+  const numPages = doc.numPages;
+  let text = "";
+
+  for (let i = 1; i <= numPages; i++) {
+    const page = await doc.getPage(i);
+    const textContent = await page.getTextContent({
+      normalizeWhitespace: false,
+      disableCombineTextItems: false
+    });
+    let lastY, pageText = '';
+    for (let item of textContent.items) {
+      if (lastY == item.transform[5] || !lastY) {
+        pageText += item.str;
+      } else {
+        pageText += '\n' + item.str;
+      }
+      lastY = item.transform[5];
+    }
+    text += `\n\n${pageText}`;
+  }
+
+  doc.destroy();
+  return { text };
 }
 
 
