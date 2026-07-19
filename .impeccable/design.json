@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-19T11:09:20Z",
+  "title": "Design System: Tidal Finance",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Command Blue", "canonical": "#007AFF", "tonalRamp": ["#001833", "#003A66", "#005C99", "#007AFF", "#3395FF", "#66B0FF", "#99CCFF", "#CCE5FF"] },
+      "canvas-dark": { "role": "neutral", "displayName": "Canvas Dark", "canonical": "#0A0A0C", "tonalRamp": ["#000000", "#050506", "#0A0A0C", "#101013", "#1B1B20", "#2D2D36", "#454553", "#626274"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Text", "purpose": "Net Worth balances and major page headers." },
+      "body": { "displayName": "Body Text", "purpose": "Main narrative content and descriptions." },
+      "mono": { "displayName": "Monospace Numerics", "purpose": "All monetary values, assets list details, and currency calculations." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "state-transition", "value": "background 0.2s cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Button and navigation hover state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "style": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action triggers.",
+      "html": "<button class=\"ds-btn-primary\">Confirm Transaction</button>",
+      "css": ".ds-btn-primary { background: #007AFF; color: #FFFFFF; font-family: Satoshi, sans-serif; font-size: 14px; font-weight: 500; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; } .ds-btn-primary:hover { opacity: 0.9; }"
+    },
+    {
+      "name": "Dashboard Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Outer container grid module.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Budgets</h3><p class=\"ds-card-body\">Content inside goes here.</p></div>",
+      "css": ".ds-card { background: #151518; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 24px; color: #F5F5F7; } .ds-card-title { font-family: Satoshi, sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 16px 0; } .ds-card-body { font-family: Satoshi, sans-serif; font-size: 14px; color: #8E8E93; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Command Deck",
+    "overview": "Tidal Finance is a high-precision, developer-tool-styled financial dashboard. The system rejects soft-pastel gradients, round card containers, and arbitrary spacing. Instead, it relies on structural layouts, clear grid lines, and monospaced typography for critical balance numbers.",
+    "keyCharacteristics": [
+      "Strict Border Grid",
+      "High Contrast Actions",
+      "Geist Mono for Numerics",
+      "Restrained Animations"
+    ],
+    "rules": [
+      { "name": "The High-Contrast Accenting Rule", "body": "The command blue primary color must only be used on interactive components (buttons, links, toggles) or state markers. It must never be used for purely decorative highlights.", "section": "colors" },
+      { "name": "The Border Grid Depth Rule", "body": "Components exist on the same flat layer. Overlapping or floating components (like dropdown lists or modal dialogs) must be bounded by a solid 1px border instead of a diffuse ambient shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do display every dollar and rupee amount using the monospaced Geist Mono font family.",
+      "Do split screens using strict borders (1px) to divide modules cleanly.",
+      "Do enforce WCAG AA (>= 4.5:1) color contrast on all form inputs and button states."
+    ],
+    "donts": [
+      "Don't use decorative gradients.",
+      "Don't nest card components inside other cards.",
+      "Don't use thick left-side accent color stripes for alert messages or badge lists.",
+      "Don't add drop shadows for hover effects; use border color updates or opacity changes."
+    ]
+  }
+}
