@@ -94,8 +94,6 @@ export default function Dashboard() {
         {/* Net Worth Bento */}
         <div className="glass-card" style={{
           gridColumn: 'span 4',
-          background: 'var(--surface-bg)',
-          border: '1px solid var(--whisper-border)',
           borderRadius: 'var(--radius-lg)',
           padding: '24px'
         }}>
@@ -113,8 +111,6 @@ export default function Dashboard() {
         {/* Allocation Bento */}
         <div className="glass-card" style={{
           gridColumn: 'span 4',
-          background: 'var(--surface-bg)',
-          border: '1px solid var(--whisper-border)',
           borderRadius: 'var(--radius-lg)',
           padding: '24px',
           display: 'flex',
@@ -164,8 +160,6 @@ export default function Dashboard() {
         {/* Budget Limits Bento */}
         <div className="glass-card" style={{
           gridColumn: 'span 4',
-          background: 'var(--surface-bg)',
-          border: '1px solid var(--whisper-border)',
           borderRadius: 'var(--radius-lg)',
           padding: '24px'
         }}>
@@ -196,8 +190,6 @@ export default function Dashboard() {
 
       {/* Transactions Feed */}
       <div className="glass-card" style={{
-        background: 'var(--surface-bg)',
-        border: '1px solid var(--whisper-border)',
         borderRadius: 'var(--radius-lg)',
         padding: '24px'
       }}>
