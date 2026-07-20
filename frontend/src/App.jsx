@@ -14,7 +14,7 @@ export function useCurrency() {
 }
 
 // ── Top Currency Bar ──────────────────────────────────────────────────────────
-function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle, sidebarExpanded, onToggleSidebar }) {
+function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle, sidebarExpanded, onToggleSidebar, theme, onToggleTheme }) {
   const loaded = !!lastUpdated || rate !== 1;
   const inr = loaded ? rate.toFixed(2) : '—';
   const usd = loaded ? (1 / rate).toFixed(4) : '—';
@@ -28,30 +28,30 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle, sidebarE
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingLeft: '20px',
-      paddingRight: '32px',
+      paddingLeft: '16px',
+      paddingRight: '16px',
       flexShrink: 0
     }}>
       {/* Left Side: Toggle + Icon + Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           className="sidebar-toggle"
           onClick={onToggleSidebar}
           title={sidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
           style={{
             background: 'transparent',
-            border: 'none',
+            border: '1px solid var(--whisper-border)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'var(--ink-secondary)',
-            padding: '6px',
-            borderRadius: '6px',
-            transition: 'background 0.2s, color 0.2s'
+            width: '28px',
+            height: '28px',
+            padding: 0
           }}
         >
-          <Menu size={18} />
+          <Menu size={14} />
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -59,77 +59,84 @@ function CurrencyBar({ currency, rate, lastUpdated, fetching, onToggle, sidebarE
             src="/logo.jpg"
             alt="Logo"
             style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '6px',
+              width: '24px',
+              height: '24px',
               border: '1px solid var(--whisper-border)',
               objectFit: 'cover'
             }}
           />
-          <span style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ink-primary)', letterSpacing: '-0.2px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--ink-primary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Tidal Finance
           </span>
+          <span className="technical-tag" style={{ fontSize: '9px', padding: '1px 4px' }}>Local v1.0</span>
         </div>
       </div>
 
-      {/* Right Side: Rate + Toggle pill */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      {/* Right Side: Rate + Theme + Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {/* Rate display */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--ink-secondary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--ink-secondary)' }}>
           {fetching
-            ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
-            : <TrendingUp size={12} style={{ color: 'var(--positive)' }} />
+            ? <RefreshCw size={11} style={{ animation: 'spin 1s linear infinite' }} />
+            : <TrendingUp size={11} style={{ color: 'var(--positive)' }} />
           }
           <span style={{ fontFamily: 'var(--font-mono)' }}>
             <span style={{ color: 'var(--ink-primary)' }}>1 USD</span>
             {' = '}
             <span style={{ color: 'var(--accent)' }}>₹{inr}</span>
-            {'  ·  '}
+            {'  |  '}
             <span style={{ color: 'var(--ink-primary)' }}>1 INR</span>
             {' = '}
-            <span style={{ color: '#FF9F0A' }}>${usd}</span>
+            <span style={{ color: 'var(--ink-primary)' }}>${usd}</span>
           </span>
           {lastUpdated && (
-            <span style={{ color: isEst ? '#FF9F0A' : 'var(--ink-secondary)', fontSize: '11px' }}>
-              · {isEst ? 'indicative rate' : `updated ${lastUpdated}`}
+            <span style={{ color: isEst ? 'var(--accent)' : 'var(--ink-secondary)', fontSize: '10px' }}>
+              ({isEst ? 'indicative' : `sync: ${lastUpdated}`})
             </span>
           )}
         </div>
 
-        {/* Toggle pill */}
+        {/* Theme Toggle */}
         <button
-          className="currency-pill"
-          onClick={onToggle}
-          title={`Switch to ${currency === 'USD' ? 'INR' : 'USD'}`}
+          onClick={onToggleTheme}
           style={{
-            display: 'flex',
-            background: 'var(--canvas-bg)',
-            borderRadius: '20px',
-            padding: '3px',
+            height: '28px',
+            background: 'transparent',
+            border: '1px solid var(--whisper-border)',
+            padding: '0 10px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10px',
+            fontWeight: 'bold',
             cursor: 'pointer',
-            gap: '2px',
-            transition: 'border-color 0.2s',
-            border: 'none'
+            color: 'var(--ink-secondary)'
           }}
         >
+          MODE: {theme.toUpperCase()}
+        </button>
+
+        {/* Currency Switcher (Brutal style segmented button) */}
+        <div style={{ display: 'flex' }}>
           {['USD', 'INR'].map((c) => (
-            <span
+            <button
               key={c}
+              onClick={() => currency !== c && onToggle()}
               style={{
-                padding: '3px 10px',
-                borderRadius: '16px',
+                height: '28px',
+                padding: '0 10px',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 'bold',
                 background: currency === c ? 'var(--accent)' : 'transparent',
                 color: currency === c ? '#fff' : 'var(--ink-secondary)',
-                transition: 'all 0.15s'
+                border: '1px solid var(--whisper-border)',
+                borderLeft: c === 'INR' ? 'none' : '1px solid var(--whisper-border)',
+                cursor: 'pointer'
               }}
             >
-              {c === 'USD' ? '$ USD' : '₹ INR'}
-            </span>
+              {c}
+            </button>
           ))}
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -148,18 +155,20 @@ function NavBtn({ active, onClick, icon: Icon, label, sidebarExpanded }) {
         justifyContent: sidebarExpanded ? 'flex-start' : 'center',
         gap: sidebarExpanded ? '12px' : '0',
         width: '100%',
-        padding: '12px',
+        padding: '12px 16px',
         border: 'none',
-        borderRadius: '8px',
+        borderLeft: `3px solid ${active ? 'var(--accent)' : 'transparent'}`,
+        background: active ? 'var(--accent-glow)' : 'transparent',
+        color: active ? 'var(--accent)' : 'var(--ink-secondary)',
         cursor: 'pointer',
         fontWeight: 'bold',
-        color: 'var(--ink-primary)',
-        transition: 'background 0.2s, gap 0.15s, padding 0.15s'
+        transition: 'all 0.1s ease',
+        textAlign: 'left'
       }}
     >
-      <Icon size={20} style={{ flexShrink: 0 }} />
+      <Icon size={16} style={{ flexShrink: 0, color: active ? 'var(--accent)' : 'var(--ink-secondary)' }} />
       {sidebarExpanded && (
-        <span style={{ whiteSpace: 'nowrap', opacity: 1, transition: 'opacity 0.15s' }}>
+        <span style={{ whiteSpace: 'nowrap', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {label}
         </span>
       )}
@@ -171,10 +180,21 @@ function NavBtn({ active, onClick, icon: Icon, label, sidebarExpanded }) {
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [currency, setCurrency] = useState(() => localStorage.getItem('currency') || 'USD');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [rate, setRate] = useState(1);
   const [lastUpdated, setLastUpdated] = useState('');
   const [fetching, setFetching] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
+  // Apply light/dark class to body
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   // Fetch cached rate from local backend
   useEffect(() => {
@@ -203,6 +223,10 @@ export default function App() {
     localStorage.setItem('currency', next);
   };
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const symbol  = currency === 'INR' ? '₹' : '$';
   const convert = (usdValue) => currency === 'INR' ? usdValue * rate : usdValue;
   const toUSD   = (displayValue) => currency === 'INR' ? displayValue / rate : displayValue;
@@ -223,26 +247,28 @@ export default function App() {
           onToggle={toggleCurrency}
           sidebarExpanded={sidebarExpanded}
           onToggleSidebar={() => setSidebarExpanded(!sidebarExpanded)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* Sidebar */}
           <aside style={{
-            width: sidebarExpanded ? '240px' : '64px',
+            width: sidebarExpanded ? '220px' : '56px',
             background: 'var(--surface-bg)',
             borderRight: '1px solid var(--whisper-border)',
             display: 'flex',
             flexDirection: 'column',
-            padding: sidebarExpanded ? '24px' : '24px 8px',
+            padding: '16px 0',
             flexShrink: 0,
-            transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1), padding 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            transition: 'width 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
           }}>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
               <NavBtn
                 active={currentTab === 'dashboard'}
                 onClick={() => setCurrentTab('dashboard')}
                 icon={BarChart2}
-                label="Dashboard"
+                label="Overview"
                 sidebarExpanded={sidebarExpanded}
               />
               <NavBtn
@@ -256,30 +282,20 @@ export default function App() {
                 active={currentTab === 'import'}
                 onClick={() => setCurrentTab('import')}
                 icon={Download}
-                label="Import Statement"
+                label="Import"
                 sidebarExpanded={sidebarExpanded}
               />
             </nav>
           </aside>
 
-          {/* Main content */}
-          <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+          {/* Main content area */}
+          <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
             {currentTab === 'dashboard' && <Dashboard />}
             {currentTab === 'portfolio' && <Portfolio />}
             {currentTab === 'import' && <ImportWizard />}
           </main>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .nav-btn              { background: transparent; }
-        .nav-btn.active       { background: var(--accent); }
-        .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.05); }
-        .currency-pill        { border: 1px solid var(--whisper-border); }
-        .currency-pill:hover  { border-color: var(--accent); }
-        .sidebar-toggle:hover { background: rgba(255,255,255,0.08) !important; color: var(--ink-primary) !important; }
-      `}</style>
     </CurrencyContext.Provider>
   );
 }

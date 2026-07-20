@@ -60,11 +60,23 @@ export default function Dashboard() {
   let accumulatedPercent = 0;
 
   return (
-    <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+    <div className="fade-in">
+      {/* Page Header (Touch Border Grid) */}
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingBottom: '20px',
+        borderBottom: '1px solid var(--whisper-border)',
+        marginBottom: '24px'
+      }}>
         <div>
-          <h2 className="title-text" style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>Overview</h2>
-          <p style={{ color: 'var(--ink-secondary)', margin: '4px 0 0 0' }}>Financial health and budgets dashboard</p>
+          <h2 className="title-text" style={{ fontSize: '20px', fontWeight: '800', margin: 0, letterSpacing: '0.05em' }}>
+            Telemetry Overview
+          </h2>
+          <p style={{ color: 'var(--ink-secondary)', margin: '4px 0 0 0', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+            LOCAL_PORTFOLIO_TELEMETRY // SECURE_STORAGE
+          </p>
         </div>
         <button 
           onClick={triggerSync} 
@@ -73,58 +85,74 @@ export default function Dashboard() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '10px 16px',
+            height: '32px',
+            padding: '0 12px',
             background: 'var(--surface-bg)',
             border: '1px solid var(--whisper-border)',
-            borderRadius: 'var(--radius-md)',
             cursor: 'pointer',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px'
           }}
         >
-          <RefreshCw size={16} className={syncing ? 'spin-anim' : ''} /> {syncing ? 'Syncing...' : 'Sync Prices'}
+          <RefreshCw size={12} className={syncing ? 'spin-anim' : ''} /> 
+          {syncing ? 'SYNCING...' : 'SYNC PRICES'}
         </button>
       </header>
 
+      {/* Strict Border Grid: Parent background acts as separator lines */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(12, 1fr)',
-        gap: '24px',
+        background: 'var(--whisper-border)',
+        gap: '1px',
+        border: '1px solid var(--whisper-border)',
         marginBottom: '24px'
       }}>
-        {/* Net Worth Bento */}
-        <div className="glass-card" style={{
+        {/* Net Worth Module */}
+        <div style={{
           gridColumn: 'span 4',
-          borderRadius: 'var(--radius-lg)',
+          background: 'var(--surface-bg)',
           padding: '24px'
         }}>
-          <p style={{ color: 'var(--ink-secondary)', margin: '0 0 8px 0', fontSize: '14px' }}>Net Worth</p>
+          <p style={{ 
+            color: 'var(--ink-secondary)', 
+            margin: '0 0 12px 0', 
+            fontSize: '11px', 
+            fontFamily: 'var(--font-mono)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>
+            [01] Net Asset Value (NAV)
+          </p>
           <h3 className="mono-num" style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '36px',
+            fontSize: '32px',
             fontWeight: 'bold',
+            color: 'var(--accent)',
             margin: 0
           }}>
             {symbol}{format(summary.netWorth)}
           </h3>
         </div>
 
-        {/* Allocation Bento */}
-        <div className="glass-card" style={{
+        {/* Allocation Donut Module */}
+        <div style={{
           gridColumn: 'span 4',
-          borderRadius: 'var(--radius-lg)',
+          background: 'var(--surface-bg)',
           padding: '24px',
           display: 'flex',
           alignItems: 'center',
-          gap: '24px'
+          gap: '20px'
         }}>
-          <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-            <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r={radius} fill="transparent" stroke="var(--canvas-bg)" strokeWidth="12" />
+          <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
+            <svg width="90" height="90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r={radius} fill="transparent" stroke="var(--canvas-bg)" strokeWidth="16" />
               {summary.allocation.map((alloc, idx) => {
                 const strokeDashoffset = circ - (alloc.percent / 100) * circ;
                 const rotation = (accumulatedPercent / 100) * 360;
                 accumulatedPercent += alloc.percent;
-                const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF2D55'];
+                const colors = ['#007aff', '#34C759', '#FF9500', '#AF52DE', '#FF2D55'];
                 return (
                   <circle 
                     key={idx}
@@ -133,7 +161,7 @@ export default function Dashboard() {
                     r={radius} 
                     fill="transparent" 
                     stroke={colors[idx % colors.length]} 
-                    strokeWidth="12"
+                    strokeWidth="16"
                     strokeDasharray={circ}
                     strokeDashoffset={strokeDashoffset}
                     transform={`rotate(${rotation - 90} 60 60)`}
@@ -142,14 +170,23 @@ export default function Dashboard() {
               })}
             </svg>
           </div>
-          <div>
-            <p style={{ color: 'var(--ink-secondary)', margin: '0 0 8px 0', fontSize: '14px' }}>Allocation</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ 
+              color: 'var(--ink-secondary)', 
+              margin: '0 0 10px 0', 
+              fontSize: '11px', 
+              fontFamily: 'var(--font-mono)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              [02] Class Weights
+            </p>
             {summary.allocation.map((a, idx) => {
-              const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF2D55'];
+              const colors = ['#007aff', '#34C759', '#FF9500', '#AF52DE', '#FF2D55'];
               return (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '4px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors[idx % colors.length] }} />
-                  <span style={{ textTransform: 'capitalize' }}>{a.type}</span>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', marginBottom: '4px' }}>
+                  <div style={{ width: '6px', height: '6px', background: colors[idx % colors.length] }} />
+                  <span style={{ textTransform: 'uppercase', fontFamily: 'var(--font-mono)', color: 'var(--ink-secondary)' }}>{a.type.replace('_', ' ')}</span>
                   <span className="mono-num" style={{ fontFamily: 'var(--font-mono)', marginLeft: 'auto', fontWeight: 'bold' }}>{a.percent.toFixed(1)}%</span>
                 </div>
               );
@@ -157,70 +194,100 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Budget Limits Bento */}
-        <div className="glass-card" style={{
+        {/* Budget Module */}
+        <div style={{
           gridColumn: 'span 4',
-          borderRadius: 'var(--radius-lg)',
+          background: 'var(--surface-bg)',
           padding: '24px'
         }}>
-          <p style={{ color: 'var(--ink-secondary)', margin: '0 0 12px 0', fontSize: '14px' }}>Monthly Budgets</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {budgets.slice(0, 3).map((b, idx) => {
-              const percent = Math.min((b.spent / b.limit) * 100, 100);
-              return (
-                <div key={idx}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                    <span>{b.category}</span>
-                    <span className="mono-num" style={{ fontFamily: 'var(--font-mono)' }}>{symbol}{format(b.spent, 0)} / {symbol}{format(b.limit, 0)}</span>
+          <p style={{ 
+            color: 'var(--ink-secondary)', 
+            margin: '0 0 12px 0', 
+            fontSize: '11px', 
+            fontFamily: 'var(--font-mono)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>
+            [03] Active Limits (Monthly)
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {budgets.length === 0 ? (
+              <p style={{ color: 'var(--ink-secondary)', fontSize: '11px', fontFamily: 'var(--font-mono)', margin: 0 }}>NO BUDGETS CONFIGURED</p>
+            ) : (
+              budgets.slice(0, 3).map((b, idx) => {
+                const percent = Math.min((b.spent / b.limit) * 100, 100);
+                return (
+                  <div key={idx}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
+                      <span style={{ textTransform: 'uppercase' }}>{b.category}</span>
+                      <span className="mono-num" style={{ color: percent >= 90 ? 'var(--negative)' : 'var(--ink-primary)' }}>
+                        {symbol}{format(b.spent, 0)} / {symbol}{format(b.limit, 0)}
+                      </span>
+                    </div>
+                    <div style={{ height: '4px', background: 'var(--canvas-bg)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${percent}%`,
+                        background: percent >= 90 ? 'var(--negative)' : 'var(--accent)'
+                      }} />
+                    </div>
                   </div>
-                  <div style={{ height: '6px', background: 'var(--canvas-bg)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${percent}%`,
-                      background: percent >= 90 ? 'var(--negative)' : 'var(--accent)',
-                      borderRadius: 'var(--radius-sm)'
-                    }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
 
-      {/* Transactions Feed */}
-      <div className="glass-card" style={{
-        borderRadius: 'var(--radius-lg)',
+      {/* Transactions Grid Module */}
+      <div style={{
+        background: 'var(--surface-bg)',
+        border: '1px solid var(--whisper-border)',
         padding: '24px'
       }}>
-        <h4 className="title-text" style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Recent Transactions</h4>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--whisper-border)', color: 'var(--ink-secondary)' }}>
-              <th style={{ padding: '12px 8px' }}>Description</th>
-              <th style={{ padding: '12px 8px' }}>Category</th>
-              <th style={{ padding: '12px 8px' }}>Date</th>
-              <th style={{ padding: '12px 8px', textAlign: 'right' }}>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((t, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid var(--whisper-border)' }}>
-                <td style={{ padding: '12px 8px' }}>{t.description}</td>
-                <td style={{ padding: '12px 8px' }}>{t.category}</td>
-                <td style={{ padding: '12px 8px', color: 'var(--ink-secondary)' }}>{new Date(t.timestamp).toLocaleDateString()}</td>
-                <td className="mono-num" style={{
-                  padding: '12px 8px',
-                  textAlign: 'right',
-                  fontFamily: 'var(--font-mono)',
-                  color: t.type === 'expense' ? 'var(--negative)' : 'var(--positive)'
-                }}>
-                  {t.type === 'expense' ? '-' : '+'}{symbol}{format(t.amount)}
-                </td>
+        <h4 className="title-text" style={{ margin: '0 0 16px 0', fontSize: '14px', letterSpacing: '0.05em' }}>
+          Recent Telemetry Feed
+        </h4>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>Telemetry ID / Desc</th>
+                <th style={{ textAlign: 'left' }}>Category</th>
+                <th style={{ textAlign: 'left' }}>Timestamp</th>
+                <th style={{ textAlign: 'right' }}>Telemetry Value</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'center', color: 'var(--ink-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', padding: '24px 0' }}>
+                    NO DATA AVAILABLE
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((t, idx) => (
+                  <tr key={idx}>
+                    <td style={{ fontSize: '13px', fontWeight: '600' }}>{t.description}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--ink-secondary)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+                      {t.category}
+                    </td>
+                    <td className="mono-num" style={{ fontSize: '12px', color: 'var(--ink-secondary)' }}>
+                      {new Date(t.timestamp).toLocaleDateString()}
+                    </td>
+                    <td className="mono-num" style={{
+                      textAlign: 'right',
+                      fontWeight: 'bold',
+                      color: t.type === 'expense' ? 'var(--negative)' : 'var(--positive)'
+                    }}>
+                      {t.type === 'expense' ? '-' : '+'}{symbol}{format(t.amount)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
